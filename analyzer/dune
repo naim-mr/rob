@@ -1,0 +1,11 @@
+(executable
+ (name main)
+ (promote
+  (until-clean)
+  (into ..))
+ (libraries yojson frontend utils domains))
+
+(env
+ (dev
+  (flags
+   (:standard -w -9-27-32-33-35 -warn-error -A))))

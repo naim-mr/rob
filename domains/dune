@@ -1,0 +1,10 @@
+(library
+ (name domains)
+ (libraries
+  apron
+  apron.boxMPQ
+  apron.octMPQ
+  apron.polkaMPQ
+  apron.polkaGrid
+  sig
+  utils))

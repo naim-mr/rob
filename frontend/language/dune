@@ -1,0 +1,15 @@
+(library
+ (public_name function.frontend.language)
+ (name language)
+ (libraries apron ctl))
+
+(ocamllex
+ (modules Lexer PropertyLexer))
+
+(menhir
+ (modules Parser PropertyParser))
+
+(env
+ (dev
+  (flags
+   (:standard -w -9-27-32-33-35 -warn-error -A))))
