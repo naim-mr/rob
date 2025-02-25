@@ -1,6 +1,7 @@
 open Lattice
 open Language.Ast
 open Apron
+open Query
 
 (* Signature of VALUE Abstract Domain *)
 module type VALUE = sig
@@ -8,10 +9,10 @@ module type VALUE = sig
   val top : var list -> t
   val bot : var list -> t
   (* Forward Over-approximating assignment*)
-  val fo_assign : t -> aExp -> aExp -> t
-  val filter : t -> bExp -> t
+  val fo_assign : t -> ichan ->  ochan -> aExp -> aExp -> t * ichan *  ochan
+  val filter : t ->  ichan ->  ochan -> bExp -> t * ichan *  ochan
   (* Backward Over-approximating assignment*)
-  val bo_assign : t -> aExp -> aExp -> t
+  val bo_assign : t -> ichan ->  ochan -> aExp -> aExp -> t * ichan *  ochan
   val print : Format.formatter -> t -> unit
   (*val bo_assign : t -> aExp -> aExp -> t 
     val fu_assign: t -> t -> t

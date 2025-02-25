@@ -15,6 +15,7 @@ open Utils.Arg_parser
 open Domains
 open InvMap
 open Language.Ast
+
 (*
    let run_analysis analysis_function program () =
      try
@@ -249,18 +250,19 @@ let doit () =
   Format.fprintf !fmt "\nAbstract Syntax:\n";
   Ast.prog_print !fmt program;
   Format.fprintf !fmt "\n";
-  let module B = Apron_numeric.Box_AP in
+  let module V = Itv.Make  in
   let module P = Apron_numeric.Poly_AP in
-  let module V = Partition.Make (P) in
+  (* let module V = Partition.Make (P) in *)
   let module I = C_fwd.Make (V) in
   let f = Ast.StringMap.find "main" funcs in
   let vars = Ast.StringMap.to_seq f.funcVars |> List.of_seq |> List.map snd in
-  let fwd = I.exec f.funcBody vars in
+  let ic,oc = Sig.Query.empty_ichan, Sig.Query.empty_ochan in
+  let fwd,_,_= I.exec f.funcBody vars ic oc in
   Format.printf "Forward analysis result \n";
   I.print Format.std_formatter fwd;
   let module B = C_bwd.Make (V) in 
   let fwd = let t = B.top vars in {t with inv = fwd.inv; num_inv = fwd.num_inv} in
-  let bwd = B.exec fwd f.funcBody vars in
+  let bwd = B.exec fwd f.funcBody vars ic oc  in
   Format.printf "\n B analysis result \n";
   B.print Format.std_formatter bwd
 let _ = doit ()

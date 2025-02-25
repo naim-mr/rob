@@ -1,5 +1,6 @@
 
 (** Signature of a lattice *)
+open Query
 module type LATTICE = sig
   type t
   val bot : t

@@ -1,6 +1,6 @@
 open Sig.Value
 open Apron
-module Make(A:VALUE) (B:VALUE):VALUE = struct
+module Make(A:VALUE) (B:VALUE) = struct
   type t = {
     t_left : A.t;
     t_right: B.t;
@@ -29,11 +29,15 @@ module Make(A:VALUE) (B:VALUE):VALUE = struct
 
   let widen t1 t2 = {t_left = lift2_l A.widen t1 t2; t_right = lift2_r B.widen t1 t2}
 
-  let fo_assign t x exp = { t_left = A.fo_assign t.t_left x exp; t_right = B.fo_assign t.t_right x exp}
+  let fo_assign t ic oc x exp = let t_left,_,_  = A.fo_assign t.t_left ic oc x exp in 
+                                let t_right,_,_ = B.fo_assign t.t_right ic oc x exp in
+                                { t_left ; t_right }
 
-  let filter t exp = { t_left = A.filter t.t_left exp; t_right = B.filter t.t_right exp}
+  let filter t ic oc exp =  let t_left,_,_  = A.filter t.t_left ic oc exp in 
+                            let t_right,_,_ = B.filter t.t_right ic oc exp in
+                            { t_left ; t_right }
 
-  let bo_assign t x exp = { t_left = A.bo_assign t.t_left x exp; t_right = B.bo_assign t.t_right x exp}
+  (* let bo_assign t ic oc x exp = { t_left = A.bo_assign t.t_left x exp; t_right = B.bo_assign t.t_right x exp} *)
   let print fmt t = Format.fprintf fmt "@[Product: (%a,%a) @]"  A.print t.t_left  B.print  t.t_right
 
   let fo_assign_man (man:'a Manager.t) t x exp = failwith "nyi"

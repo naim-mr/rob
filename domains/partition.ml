@@ -12,9 +12,10 @@ open Constraint
 open Apron_numeric
 open Sig.Value
 open Apron 
+open Sig.Apron_dom
 open Language.Ast
 
-module Make(N:APRON_DOM):VALUE
+module Make(N:APRON_DOM)(*:VALUE*)
 = struct
 
   (** Linear constraints used to represent the partition. *)

@@ -34,51 +34,55 @@ module Make (V : VALUE) = struct
           t1.num_inv t2.num_inv;
     }
 
-  let filter t b = { t with inv = V.filter t.inv b }
-  let bo_assign t x e = { t with inv = V.bo_assign t.inv x e }
+  let filter t ic oc b = let inv,ic,oc =  V.filter t.inv  ic oc b in { t with inv = inv },ic, oc
+  let bo_assign t x ic oc e = let inv,ic,oc =  V.bo_assign t.inv ic oc  x e in { t with inv =  inv},ic,oc
 
   let print fmt t =
     InvMap.iter
       (fun l tn -> Format.fprintf fmt "%d:%a\n" l V.print tn)
       t.num_inv
 
-  let exec fwd main vars =
-    let rec stmt pre t s =
+  let exec fwd main vars ic oc =
+    let rec stmt pre t  ic oc s =
       match s with
-      | A_label _ -> t
+      | A_label _ -> t,ic,oc
       | A_assign ((lval, _), (exp, _)) ->
-          let inv = V.bo_assign t.inv lval exp in
-          { t with inv }
+          bo_assign t lval ic oc exp
       | A_if ((b, ba), s1, s2) ->
-          let t1 = block { t with inv = V.filter t.inv b } s1 in
-          let t2 =
-            block { t with inv = V.filter t.inv (fst (negBExp (b, ba))) } s2
+          let t1,_,_ = (filter t ic oc b) in
+          let t1,ic,oc = block t1 ic oc s1 in
+          let t2,_,_ = (filter t ic oc (fst (negBExp (b, ba)))) in
+          let t2,ic,oc =
+            block t2 ic oc s2
           in
-          join t1 t2
+          join t1 t2,ic,oc (* join*)
       | A_while (l, (b, ba), s) ->
-          let rec aux is im n =
+          let rec aux is im ic oc  n =
             let i = join t im in
-            if V.is_leq i.inv is.inv then is
+            if V.is_leq i.inv is.inv then is,ic,oc
             else
               let is =
                 if n <= !Config.joinfwd then i
                 else { i with inv = V.widen is.inv i.inv }
               in
-              aux is (block { t with inv = V.filter is.inv b } s) (n + 1)
+              let t,ic,i = let inv,_,_ = V.filter is.inv ic oc b  in (block { t with inv = inv } ic oc  s) in 
+              aux is t ic oc (n + 1)
           in
           let is = bot vars in
-          let im = block { t with inv = V.filter t.inv b } s in
-          let res = aux is im 1 in
+          let t,_,_ = filter t ic oc b in 
+          let im,ic,oc = block  t ic oc s in
+          let res,ic,oc = aux is im ic oc 1 in
           let res = add_inv res l res.inv in
-          filter res (fst (negBExp (b, ba)))
+          filter res ic oc (fst (negBExp (b, ba)))
       | _ -> failwith "nyi"
-    and block t b =
+    and block t ic oc b =
       match b with
-      | A_empty l -> add_inv t l (V.meet t.inv (InvMap.find l fwd.num_inv))
+      | A_empty l -> add_inv t l (V.meet t.inv (InvMap.find l fwd.num_inv)),ic, oc
       | A_block (l, (s, _), b) ->
-          let t = (block t b) in 
-          let t = stmt (InvMap.find l fwd.num_inv) t s in
-          add_inv t l t.inv
+          let t,ic,oc = (block t ic oc b) in 
+          let t,ic,oc = stmt (InvMap.find l fwd.num_inv) t ic oc s in
+          add_inv t l t.inv,ic,oc
     in
-    block { (top vars) with inv = fwd.inv } main
+    let t,_,_ =  block { (top vars) with inv = fwd.inv } ic oc main in 
+    t
 end

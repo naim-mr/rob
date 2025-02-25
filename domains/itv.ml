@@ -1,47 +1,20 @@
-open Language.Ast
-open Apron
 open Sig.Value
+open Apron 
+open Language.Ast
 open Sig.Apron_dom
-
-(* Polyhedra Abstract Domain (strict)*)
-module Poly_AP : APRON_DOM = (
+(* Boxes Abstract Domain (strict)*)
+module Box_AP : APRON_DOM = (
   struct
-    type t = Polka.strict Polka.t
+    type t = Box.t
 
-    let man : t Manager.t = Polka.manager_alloc_strict ()
+    let man : t Manager.t = Box.manager_alloc ()
   end :
     APRON_DOM)
 
-(* Octagons Abstract Domain (strict)*)
-module Oct_AP : APRON_DOM = (
-  struct
-    type t = Oct.t
-
-    let man : t Manager.t = Oct.manager_alloc ()
-  end :
-    APRON_DOM)
-
-
-
-(* Reduced Product between Polyhedra and Linear congruences Abstract Domains *)
-module PolyGrid_AP : APRON_DOM = struct
-  type t = Polka.strict PolkaGrid.t
-
-  let man =
-    PolkaGrid.manager_alloc
-      (Polka.manager_alloc_strict ())
-      (Ppl.manager_alloc_grid ())
-end
-
-(* Linear Congruence Abstract Domain*)
-module Grid_AP : APRON_DOM = struct
-  type t = Ppl.grid Ppl.t
-
-  let man = Ppl.manager_alloc_grid ()
-end
 
 (* Build a Value abstract domain from an apron numerical abstract domain *)
-module Make (A : APRON_DOM) : VALUE = struct
+module Make: VALUE = struct
+  module A = Box_AP
   type t = { abs : A.t Abstract1.t; env : Environment.t; vars : var list }
 
   let rec make_env xs env =

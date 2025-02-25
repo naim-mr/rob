@@ -11,10 +11,11 @@
 open Constraint
 open Apron_numeric
 open Sig.Value
+open Sig.Apron_dom
 open Apron
 open Language.Ast
 
-module Make (N : APRON_DOM) : VALUE = struct
+module Make (N : APRON_DOM) (*:VALUE*) = struct
   module C = Constraint
   (** Linear constraints used to represent the partition. *)
 
